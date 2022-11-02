@@ -1,12 +1,12 @@
 Бот настроения 
 --------------
 
-Бот был написан в образовталеьных целях, (на стриме)[https://www.youtube.com/watch?v=Fcn5OFCpsqc]
+Бот был написан в образовталеьных целях для курса [learn.python.ru](learn.python.ru) - [на стриме](https://www.youtube.com/watch?v=Fcn5OFCpsqc).
 
 Для запуска 
 ===========
 
- - создать файл `settings.py` с токеном полученным от https://t.me/BotFather
+ - создать файл `settings.py` с токеном полученным от [BotFather](https://t.me/BotFather)
  пример файла `settings.py`:
  ```
  TOKEN = '1234567890:qweertyuiop'
