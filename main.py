@@ -9,10 +9,10 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Conversa
 
 from settings import TOKEN
 
-users = []
-histoy = {}
+users = [] # Список пользователей
+histoy = {} # История ответов пользователя
 
-
+# Создание клавиатуры
 keyboard = [
         [
             InlineKeyboardButton("😃", callback_data='5'),
@@ -25,6 +25,7 @@ keyboard = [
 
 
 def start_user(update: Updater, context: CallbackContext):
+    """Обработка команды /start"""
     user = update.effective_user
     print(user)
     users.append(user.id)
@@ -34,9 +35,9 @@ def start_user(update: Updater, context: CallbackContext):
     
 
 def mood(update: Updater, context: CallbackContext):
+    """Обработка ответа пользователя на вопрос о настроении"""
     user = update.effective_user
     query = update.callback_query
-    print(histoy)
     
     histoy[user.id].append({'answer': query.data, 'date': datetime.now()})
     
@@ -46,6 +47,10 @@ def mood(update: Updater, context: CallbackContext):
     
 
 def schedule_checker():
+    """Обработка задач из модуля schedule.
+    
+        Проверяем, есть ли задачи, которые нужно выполнить
+    """
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -59,10 +64,12 @@ def main():
     dp.add_handler(CallbackQueryHandler(mood))
     
     def send_mood():
+        """Рассылка всем пользователям, вопроса о настроении."""
         for user in users:
             dp.bot.sendMessage(chat_id=user, text="Как твое настроение?", reply_markup=InlineKeyboardMarkup(keyboard))
     
     def send_you_best():
+        """Рассылка всем пользователм, подбадривающего сообщения."""
         phrases = [
             'Марковка полна каротином, шпинат полон кальцеем, а твое настроение полно позитивом!',
             'Ты сегодня великолепен!',
@@ -77,7 +84,6 @@ def main():
     # schedule.every().day.at("17:56").do(send_mood)
     schedule.every(10).seconds.do(send_you_best)
     Thread(target=schedule_checker).start()
-
 
     print("Бот стартовал")
     mybot.start_polling()
