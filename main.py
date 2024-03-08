@@ -1,93 +1,94 @@
-import time
+#!/usr/bin/env python
+# pylint: disable=unused-argument
+# This program is dedicated to the public domain under the CC0 license.
+
+"""
+Simple Bot to reply to Telegram messages.
+
+First, a few handler functions are defined. Then, those functions are passed to
+the Application and registered at their respective places.
+Then, the bot is started and runs until we press Ctrl-C on the command line.
+
+Usage:
+Basic Echobot example, repeats messages.
+Press Ctrl-C on the command line or send a signal to the process to stop the
+bot.
+"""
+
+import logging
+
+from telegram import ForceReply, Update
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+
 import random
-from datetime import datetime
-from threading import Thread
+import os
 
-import schedule
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, ConversationHandler, CallbackContext
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+# set higher logging level for httpx to avoid all GET and POST requests being logged
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
-from settings import TOKEN
-
-users = [] # Список пользователей
-histoy = {} # История ответов пользователя
-
-# Создание клавиатуры
-keyboard = [
-        [
-            InlineKeyboardButton("😃", callback_data='5'),
-            InlineKeyboardButton("😐", callback_data='4'),
-            InlineKeyboardButton("😞", callback_data='3'),
-            InlineKeyboardButton("☹️", callback_data='2'),
-            InlineKeyboardButton("😢", callback_data='1'),
-        ]
-    ]
+logger = logging.getLogger(__name__)
 
 
-def start_user(update: Updater, context: CallbackContext):
-    """Обработка команды /start"""
+# Define a few command handlers. These usually take the two arguments update and
+# context.
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /start is issued."""
     user = update.effective_user
-    print(user)
-    users.append(user.id)
-    histoy[user.id] = []
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("Привет, {}! Я бот!".format(user.first_name), reply_markup=reply_markup)
-    
-
-def mood(update: Updater, context: CallbackContext):
-    """Обработка ответа пользователя на вопрос о настроении"""
-    user = update.effective_user
-    query = update.callback_query
-    
-    histoy[user.id].append({'answer': query.data, 'date': datetime.now()})
-    
-    query.edit_message_text(
-        text="Спасибо, {}! Ваше настроение на: {}".format(user.first_name, query.data)
+    await update.message.reply_html(
+        rf"Hi {user.mention_html()}!",
+        reply_markup=ForceReply(selective=True),
     )
-    
 
-def schedule_checker():
-    """Обработка задач из модуля schedule.
-    
-        Проверяем, есть ли задачи, которые нужно выполнить
-    """
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-    
 
-def main():
-    mybot = Updater(TOKEN, use_context=True)
-    
-    dp = mybot.dispatcher
-    dp.add_handler(CommandHandler("start", start_user))
-    dp.add_handler(CallbackQueryHandler(mood))
-    
-    def send_mood():
-        """Рассылка всем пользователям, вопроса о настроении."""
-        for user in users:
-            dp.bot.sendMessage(chat_id=user, text="Как твое настроение?", reply_markup=InlineKeyboardMarkup(keyboard))
-    
-    def send_you_best():
-        """Рассылка всем пользователм, подбадривающего сообщения."""
-        phrases = [
-            'Марковка полна каротином, шпинат полон кальцеем, а твое настроение полно позитивом!',
-            'Ты сегодня великолепен!',
-            'Ты сегодня прекрасен!',
-            'Ты сегодня замечательен!',
-            'Тебе просили передать: Ты должен быть обнять!',
-            'Это палочка ➖, а это галочка ✅ , в графе что ты лапочка!',
-        ]
-        for user in users:
-            dp.bot.sendMessage(chat_id=user, text=random.choice(phrases))
-    
-    # schedule.every().day.at("17:56").do(send_mood)
-    schedule.every(10).seconds.do(send_you_best)
-    Thread(target=schedule_checker).start()
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message when the command /help is issued."""
+    await update.message.reply_text("Help!")
 
-    print("Бот стартовал")
-    mybot.start_polling()
-    mybot.idle()
+async def lebron_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    directory = "photos/"
+    random_image = random.choice(os.listdir(directory))
+    print( random_image)
+    await update.message.reply_photo(photo=directory + random_image, caption='🖐️👈')
+
+
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Echo the user message."""
+    chat_id = update.message.chat_id
+    text = update.message.text
+
+    match text:
+        case '1917':
+            # await update.message.reply_sticker(sticker='CAACAgQAAxkBAAEo_sZlqq6-R7vS1YSrXccKtGwwcoTK7wACPxgAAqbxcR4lSV03aK6BaTQE')
+            await update.message.reply_photo(photo='https://d15lrsitp7y7u.cloudfront.net/wp-content/uploads/2016/06/jordan-shrug-game.jpg', caption='GOAT🐐🐐🐐')
+        case 'iris':
+            await update.message.reply_sticker(sticker='CAACAgIAAxkBAAEo_qJlqqls0F4UzT-B-W3kTzb5FH3CuAACdRoAAgb-aUnKEzbSS0rckTQE')
+        case 'timoxa':
+            await update.message.reply_sticker(sticker='CAACAgIAAxkBAAEo_sRlqq62er6e7wL0S79SnZ-GQrWevQACMBkAAjalGUovXTYAAT6tdfk0BA')
+        case 'medved':
+            await update.message.reply_sticker(sticker='CAACAgIAAxkBAAEo_qRlqqlwYYUIDXLIPV1Jyfgo3iu46QAC9hgAArxzuEmjv6WqccYocDQE')
+        case 'amir':
+            await update.message.reply_sticker(sticker='CAACAgIAAxkBAAEo_qRlqqlwYYUIDXLIPV1Jyfgo3iu46QAC9hgAArxzuEmjv6WqccYocDQE')
+
+
+def main() -> None:
+    """Start the bot."""
+    # Create the Application and pass it your bot's token.
+    application = Application.builder().token("6899842187:AAGzgwhea7dTAv0QiXJJegS8oUHbeVs4PkQ").build()
+
+    # on different commands - answer in Telegram
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("daily_lebron", lebron_command))
+
+    # on non command i.e message - echo the message on Telegram
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+
+    # Run the bot until the user presses Ctrl-C
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
